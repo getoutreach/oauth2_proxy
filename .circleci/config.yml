@@ -5,12 +5,19 @@ jobs:
       # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
       # the repo and tag should match the "repo" and "version" labels in the Dockerfile
       - image: golang:1.8
-    working_directory: ~/oauth2-proxy
+    # http://code.openark.org/blog/development/forking-golang-repositories-on-github-and-managing-the-import-path
     steps:
-      - checkout
       - run:
-          name: Test
+          name: Setup
           command: |
+            cd $GOPATH
+            mkdir -p {src,bin,pkg}
+            mkdir -p src/github.com/bitly/
+            cd src/github.com/bitly/
+      - checkout:
+          path: /go/src/github.com/bitly/
+      - run: 
+            cd /go/src/github.com/bityly
             curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
             chmod +x gpm
             ./gpm install
