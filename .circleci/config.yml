@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    docker:
+      # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
+      # the repo and tag should match the "repo" and "version" labels in the Dockerfile
+      - image: golang:1.8
+    working_directory: ~/oauth2-proxy
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: |
+            curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
+            chmod +x gpm
+            ./gpm install
+            ./test.sh
