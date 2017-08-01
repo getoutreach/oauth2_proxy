@@ -12,14 +12,14 @@ jobs:
           command: |
             cd $GOPATH
             mkdir -p {src,bin,pkg}
-            mkdir -p src/github.com/bitly/
+            mkdir -p src/github.com/bitly/oauth2_proxy
             cd src/github.com/bitly/
       - checkout:
-          path: /go/src/github.com/bitly/
+          path: /go/src/github.com/bitly/oauth2_proxy
       - run:
           name: Test
           command: |
-            cd /go/src/github.com/bitly
+            cd /go/src/github.com/bitly/oauth2_proxy
             curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
             chmod +x gpm
             ./gpm install
