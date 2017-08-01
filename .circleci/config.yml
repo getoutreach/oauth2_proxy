@@ -16,7 +16,9 @@ jobs:
             cd src/github.com/bitly/
       - checkout:
           path: /go/src/github.com/bitly/
-      - run: 
+      - run:
+          name: Test
+          command: 
             cd /go/src/github.com/bitly
             curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
             chmod +x gpm
