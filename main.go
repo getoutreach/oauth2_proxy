@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -68,6 +70,7 @@ func main() {
 	flagSet.Bool("cookie-httponly", true, "set HttpOnly cookie flag")
 
 	flagSet.Bool("request-logging", true, "Log requests to stdout")
+	flagSet.String("log-file-path", "", "Log requests to a log file.")
 
 	flagSet.String("provider", "google", "OAuth provider")
 	flagSet.String("login-url", "", "Authentication endpoint")
@@ -123,10 +126,47 @@ func main() {
 			log.Fatalf("FATAL: unable to open %s %s", opts.HtpasswdFile, err)
 		}
 	}
+	ostream := os.Stdout
+	if opts.LogFilePath != "" {
+		ostream = openLog(opts.LogFilePath)
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGHUP)
+
+		go func(path string) {
+			for {
+				select {
+				case sig, _ := <-c:
+					switch sig {
+					case os.Interrupt:
+						log.Fatal("Interrupt detected. Closing...")
+						return
+					case syscall.SIGHUP:
+						fmt.Println("Recreating log stream...")
+						err := ostream.Close()
+						if err != nil {
+							panic(err)
+						}
+						*ostream = *openLog(path)
+					}
+				}
+			}
+		}(opts.LogFilePath)
+	}
+
+	handler := LoggingHandler(ostream, oauthproxy, opts.RequestLogging)
 
 	s := &Server{
-		Handler: LoggingHandler(os.Stdout, oauthproxy, opts.RequestLogging),
+		Handler: handler,
 		Opts:    opts,
 	}
 	s.ListenAndServe()
+	ostream.Close()
+}
+
+func openLog(path string) *os.File {
+	logfile, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	return logfile
 }
