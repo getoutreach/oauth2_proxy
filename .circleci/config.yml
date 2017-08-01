@@ -24,13 +24,13 @@ jobs:
             chmod +x gpm
             ./gpm install
             ./test.sh
-dependencies:
-  pre:
-    - gem install fpm
-    - pip install awscli
-deployment:
-  staging:
-    branch: master
-    commands:
-      - cd /go/src/github.com/bitly/oauth2_proxy && make release
-      - cd /go/src/github.com/bitly/oauth2_proxy && make push
+      - deploy:
+          name: Deploy package to s3
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              gem install fpm
+              pip install awscli
+              cd /go/src/github.com/bitly/oauth2_proxy
+              make release
+              make push
+            fi
