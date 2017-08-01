@@ -72,7 +72,8 @@ type Options struct {
 	Scope             string `flag:"scope" cfg:"scope"`
 	ApprovalPrompt    string `flag:"approval-prompt" cfg:"approval_prompt"`
 
-	RequestLogging bool `flag:"request-logging" cfg:"request_logging"`
+	RequestLogging bool   `flag:"request-logging" cfg:"request_logging"`
+	LogFilePath    string `flag:"log-file-path" cfg:"log_file_path"`
 
 	SignatureKey string `flag:"signature-key" cfg:"signature_key" env:"OAUTH2_PROXY_SIGNATURE_KEY"`
 
