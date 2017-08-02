@@ -29,7 +29,7 @@ jobs:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               apt-get update
-              apt-get install ruby-dev build-essential
+              apt-get install -y ruby-dev build-essential
               gem install fpm
               pip install awscli
               cd /go/src/github.com/bitly/oauth2_proxy
