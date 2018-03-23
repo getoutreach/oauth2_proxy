@@ -1,28 +1,40 @@
+defaults: &defaults
+  # http://code.openark.org/blog/development/forking-golang-repositories-on-github-and-managing-the-import-path
+  working_directory: /go/src/github.com/bitly/oauth2_proxy
+  docker:
+    - image: golang:1.10
 version: 2
 jobs:
   build:
-    docker:
-      # if you update this, make sure to rebuild the docker image using ./bin/docker-build-circle-image
-      # the repo and tag should match the "repo" and "version" labels in the Dockerfile
-      - image: golang:1.8
-    # http://code.openark.org/blog/development/forking-golang-repositories-on-github-and-managing-the-import-path
+    <<: *defaults
     steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-deps-{{ checksum "Gopkg.lock" }}
+            - go-deps-{{ .Branch }}
+            - go-deps
       - run:
-          name: Setup
+          name: Vendor Dependencies
           command: |
-            cd /go
-            mkdir -p {src,bin,pkg}
-            mkdir -p src/github.com/bitly/oauth2_proxy
-            cd src/github.com/bitly/
-      - checkout:
-          path: /go/src/github.com/bitly/oauth2_proxy
+            curl -sLo /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.3.2/dep-linux-amd64
+            chmod +x /usr/local/bin/dep
+            /usr/local/bin/dep ensure
+      - save_cache:
+          key: go-deps-{{ checksum "Gopkg.lock" }}
+          paths:
+            - "/go/src/github.com/bitly/oauth2_proxy/vendor"
+      - save_cache:
+          key: go-deps-{{ .Branch }}
+          paths:
+            - "/go/src/github.com/bitly/oauth2_proxy/vendor"
+      - save_cache:
+          key: go-deps
+          paths:
+            - "/go/src/github.com/bitly/oauth2_proxy/vendor"
       - run:
           name: Test
           command: |
-            cd /go/src/github.com/bitly/oauth2_proxy
-            curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
-            chmod +x gpm
-            ./gpm install
             ./test.sh
       - deploy:
           name: Deploy package to s3
@@ -33,6 +45,6 @@ jobs:
               gem install fpm
               pip install awscli
               cd /go/src/github.com/bitly/oauth2_proxy
+              make package
               make release
-              make push
             fi
