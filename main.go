@@ -130,13 +130,4 @@ func main() {
 		Opts:    opts,
 	}
 	s.ListenAndServe()
-	ostream.Close()
-}
-
-func openLog(path string) *os.File {
-	logfile, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	return logfile
 }
