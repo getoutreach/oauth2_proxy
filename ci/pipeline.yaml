@@ -12,36 +12,30 @@ resources:
       access_token: ((github-access-token))
       private_key: ((git-private-key))
       repo: getoutreach/oauth2_proxy
-  - name: git-repo
-    type: git
-    source:
-      uri: git@github.com:getoutreach/oauth2_proxy.git
-      branch: master
-      private_key: ((git-private-key))
 
 jobs:
-- name: test
+- name: pr-test
   plan:
-  - get: git-pull-requests
+  - get: git-pull-request
     trigger: true
     version: every
-  - put: git-pull-requests
+  - put: git-pull-request
     params:
-      path: git-pull-requests
+      path: git-pull-request
       status: pending
   - task: test
     file: ci/test.yaml
     on_abort:
-      put: git-pull-requests
+      put: git-pull-request
       params:
-        path: git-pull-requests
+        path: git-pull-request
         status: failure
     on_failure:
-      put: git-pull-requests
+      put: git-pull-request
       params:
-        path: git-pull-requests
+        path: git-pull-request
         status: failure
-  - put: git-pull-requests
+  - put: git-pull-request
     params:
-      path: git-pull-requests
+      path: git-pull-request
       status: success
