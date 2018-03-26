@@ -2,8 +2,9 @@ resources:
   - name: git-repo
     type: git
     source:
-      uri: git@github.com:ctbarrett/oauth2_proxy.git
+      uri: git@github.com:getoutreach/oauth2_proxy.git
       branch: concourse_setup
+      private_key: ((git-private-key))
 
 jobs:
 - name: hello-world
