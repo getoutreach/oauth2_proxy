@@ -1,0 +1,16 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: '1.10'
+
+inputs:
+- name: git-repo
+  path: /go/src/github.com/bitly/oauth2_proxy
+
+run:
+  dir: /go/src/github.com/bitly/oauth2_proxy
+  path: ./test.sh
