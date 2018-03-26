@@ -1,15 +1,45 @@
+resource_types:
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: jtarchie/pr
+  - name: github-status
+    type: docker-image
+    source:
+      repository: dpb587/github-status-resource
+      tag: master
+
 resources:
+  - name: git-pull-requests
+    type: pull-request
+    source:
+      uri: git@github.com:getoutreach/oauth2_proxy.git
+      access_token: ((github-access-token))
+      private_key: ((git-private-key))
+      repo: getoutreach/oauth2_proxy
   - name: git-repo
     type: git
     source:
       uri: git@github.com:getoutreach/oauth2_proxy.git
       branch: master
       private_key: ((git-private-key))
+  - name: repo-status
+    type: github-status
+    source:
+      repository: getoutreach/oauth2_proxy
+      access_token: ((github-access-token))
+      context: ci/concourse
 
 jobs:
 - name: hello-world
   plan:
-  - get: git-repo
+  - get: git-pull-requests
+    trigger: true
+    version: every
+  - put: git-pull-requests
+    params:
+      path: git-pull-requests
+      status: pending
   - task: say-hello
     config:
       platform: linux
@@ -19,3 +49,12 @@ jobs:
       run:
         path: echo
         args: ["Hello, world!"]
+    on_failure:
+      put: git-pull-requests
+      params:
+        path: git-pull-requests
+        status: failure
+  - put: git-pull-requests
+    params:
+      path: git-pull-requests
+      status: success
