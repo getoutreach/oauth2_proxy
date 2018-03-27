@@ -25,7 +25,7 @@ jobs:
       path: git-pull-request
       status: pending
   - task: test
-    file: test.yaml
+    file: git-pull-request/ci/test.yaml
     on_abort:
       put: pr-status-failed
       resource: git-pull-request
