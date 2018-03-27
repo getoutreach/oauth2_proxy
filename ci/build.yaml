@@ -15,5 +15,8 @@ inputs:
 outputs:
 - name: build-files
 
+caches:
+- path: build-src
+
 run:
   path: pull-request/ci/build.sh
