@@ -1,7 +1,7 @@
 FROM golang:1.10
 
 WORKDIR /oauth2_proxy
-COPY . .
+COPY build-files .
 
 EXPOSE 4180
 

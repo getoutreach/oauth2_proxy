@@ -4,6 +4,38 @@ resource_types:
     source:
       repository: jtarchie/pr
 
+jobs:
+- name: build-pr
+  plan:
+  - get: pull-request
+    trigger: true
+    version: every
+  - put: pr-status-pending
+    resource: pull-request
+    params:
+      path: pull-request
+      status: pending
+
+  - get: oauth2_proxy
+
+  - task: go-build
+    file: pull-request/ci/build.yaml
+    on_failure:
+      put: pr-status-failed
+      resource: pull-request
+      params:
+        path: pull-request
+        status: failure
+
+  - put: build-docker-image
+    passed: [go-build]
+
+  - put: pr-status-success
+    resource: pull-request
+    params:
+      path: pull-request
+      status: success
+
 resources:
   - name: pull-request
     type: pull-request
@@ -19,34 +51,8 @@ resources:
       uri: https://github.com/bitly/oauth2_proxy.git
       branch: master
 
-jobs:
-- name: build-pr
-  plan:
-  - get: pull-request
-    trigger: true
-    version: every
-  - put: pr-status-pending
-    resource: pull-request
-    params:
-      path: pull-request
-      status: pending
-  - get: oauth2_proxy
-  - task: build
-    file: pull-request/ci/build.yaml
-    on_abort:
-      put: pr-status-failed
-      resource: pull-request
-      params:
-        path: pull-request
-        status: failure
-    on_failure:
-      put: pr-status-failed
-      resource: pull-request
-      params:
-        path: pull-request
-        status: failure
-  - put: pr-status-success
-    resource: pull-request
-    params:
-      path: pull-request
-      status: success
+  - name: build-docker-image
+    type: docker-image
+    source:
+      repository: 182192988802.dkr.ecr.us-west-2.amazonaws.com/oauth2_proxy
+      parameters: { build: pull-request, tag: pull-request/VERSION }
