@@ -28,7 +28,6 @@ jobs:
         status: failure
 
   - put: build-docker-image
-    passed: [go-build]
 
   - put: pr-status-success
     resource: pull-request
