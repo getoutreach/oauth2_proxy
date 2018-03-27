@@ -5,7 +5,7 @@ resource_types:
       repository: jtarchie/pr
 
 resources:
-  - name: git-pull-request
+  - name: pull-request
     type: pull-request
     source:
       uri: git@github.com:getoutreach/oauth2_proxy.git
@@ -14,32 +14,32 @@ resources:
       repo: getoutreach/oauth2_proxy
 
 jobs:
-- name: pr-test
+- name: test-pr
   plan:
-  - get: git-pull-request
+  - get: pull-request
     trigger: true
     version: every
   - put: pr-status-pending
-    resource: git-pull-request
+    resource: pull-request
     params:
-      path: git-pull-request
+      path: pull-request
       status: pending
   - task: test
-    file: git-pull-request/ci/test.yaml
+    file: pull-request/ci/test.yaml
     on_abort:
       put: pr-status-failed
-      resource: git-pull-request
+      resource: pull-request
       params:
-        path: git-pull-request
+        path: pull-request
         status: failure
     on_failure:
       put: pr-status-failed
-      resource: git-pull-request
+      resource: pull-request
       params:
-        path: git-pull-request
+        path: pull-request
         status: failure
   - put: pr-status-success
-    resource: git-pull-request
+    resource: pull-request
     params:
-      path: git-pull-request
+      path: pull-request
       status: success
