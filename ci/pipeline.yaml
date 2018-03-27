@@ -19,23 +19,27 @@ jobs:
   - get: git-pull-request
     trigger: true
     version: every
-  - put: git-pull-request
+  - put: pr-status-pending
+    resource: git-pull-request
     params:
       path: git-pull-request
       status: pending
   - task: test
     file: ci/test.yaml
     on_abort:
-      put: git-pull-request
+      put: pr-status-failed
+      resource: git-pull-request
       params:
         path: git-pull-request
         status: failure
     on_failure:
-      put: git-pull-request
+      put: pr-status-failed
+      resource: git-pull-request
       params:
         path: git-pull-request
         status: failure
-  - put: git-pull-request
+  - put: pr-status-success
+    resource: git-pull-request
     params:
       path: git-pull-request
       status: success
