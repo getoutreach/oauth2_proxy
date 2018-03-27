@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: '1.10'
+
+inputs:
+- name: pull-request
+- name: oauth2_proxy
+  path: build-src/src/github.com/bitly/oauth2_proxy
+
+outputs:
+- name: build-files
+
+run:
+  path: pull-request/ci/build.sh

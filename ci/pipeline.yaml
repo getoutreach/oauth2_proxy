@@ -13,8 +13,14 @@ resources:
       private_key: ((git-private-key))
       repo: getoutreach/oauth2_proxy
 
+  - name: oauth2_proxy
+    type: git
+    source:
+      uri: https://github.com/bitly/oauth2_proxy.git
+      branch: master
+
 jobs:
-- name: test-pr
+- name: build-pr
   plan:
   - get: pull-request
     trigger: true
@@ -24,8 +30,9 @@ jobs:
     params:
       path: pull-request
       status: pending
-  - task: test
-    file: pull-request/ci/test.yaml
+  - get: oauth2_proxy
+  - task: build
+    file: pull-request/ci/build.yaml
     on_abort:
       put: pr-status-failed
       resource: pull-request
