@@ -12,9 +12,7 @@ jobs:
     version: every
   - put: pr-status-pending
     resource: pull-request
-    params:
-      path: pull-request
-      status: pending
+    params: { path: pull-request, status: pending }
 
   - get: oauth2_proxy
 
@@ -23,17 +21,14 @@ jobs:
     on_failure:
       put: pr-status-failed
       resource: pull-request
-      params:
-        path: pull-request
-        status: failure
+      params: { path: pull-request, status: failure }
 
   - put: build-docker-image
+    params: { build: pull-request, tag: pull-request/VERSION }
 
   - put: pr-status-success
     resource: pull-request
-    params:
-      path: pull-request
-      status: success
+    params: { path: pull-request, status: success }
 
 resources:
   - name: pull-request
