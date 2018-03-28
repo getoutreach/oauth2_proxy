@@ -11,12 +11,12 @@ services:
     build: .
     ports:
       - "80:4180"
-    command: --cookie-secure=false --upstream="http://upstream:80" --http-address="0.0.0.0:4180" --provider oidc --oidc-issuer-url="https://outreach.oktapreview.com/oauth2/aused8pt4e4tKqPud0h7" --redirect-url="http://localhost/oauth2/callback" --email-domain="outreach.io"
+    command: --cookie-secure=false --upstream="http://upstream:80" --http-address="0.0.0.0:4180" --provider oidc --oidc-issuer-url="https://outreach.oktapreview.com" --redirect-url="http://localhost/oauth2/callback" --email-domain="outreach.io"
     environment:
-      OAUTH2_PROXY_COOKIE_SECRET: SA5dqrf5tDbpeYQaeetb7gcc
+      OAUTH2_PROXY_COOKIE_SECRET: super_secret_arbitrary_cookie_secret
       OAUTH2_PROXY_COOKIE_DOMAIN: localhost
-      OAUTH2_PROXY_CLIENT_ID: 0oaed7d38uZHiKenI0h7
-      OAUTH2_PROXY_CLIENT_SECRET: roT3ZNNpcT6IBftJM5ncoVIZDiUq6Oj472i1CfNY
+      OAUTH2_PROXY_CLIENT_ID: <OIDC_CLIENT_ID>
+      OAUTH2_PROXY_CLIENT_SECRET: <OIDC_CLIENT_SECRET>
     networks:
       - authproxy
 
@@ -26,8 +26,8 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - "./docker/demo:/usr/share/nginx/html:ro"
-      - "./docker/configs/nginx:/etc/nginx"
+      - "./example/index.html:/usr/share/nginx/html/index.html:ro"
+      - "./example/nginx:/etc/nginx"
     networks:
       - authproxy
 
