@@ -14,17 +14,12 @@ jobs:
     resource: pull-request
     params: { path: pull-request, status: pending }
 
-  - get: oauth2_proxy
-
-  - task: go-build
-    file: pull-request/ci/build.yaml
+  - put: build-docker-image
+    params: { build: pull-request, tag: pull-request/VERSION }
     on_failure:
       put: pr-status-failed
       resource: pull-request
       params: { path: pull-request, status: failure }
-
-  - put: build-docker-image
-    params: { build: pull-request, tag: pull-request/VERSION }
 
   - put: pr-status-success
     resource: pull-request
@@ -38,12 +33,6 @@ resources:
       access_token: ((github-access-token))
       private_key: ((git-private-key))
       repo: getoutreach/oauth2_proxy
-
-  - name: oauth2_proxy
-    type: git
-    source:
-      uri: https://github.com/bitly/oauth2_proxy.git
-      branch: master
 
   - name: build-docker-image
     type: docker-image
