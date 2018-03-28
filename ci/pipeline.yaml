@@ -1,0 +1,41 @@
+resource_types:
+  - name: pull-request
+    type: docker-image
+    source:
+      repository: jtarchie/pr
+
+jobs:
+- name: build-pr
+  plan:
+  - get: pull-request
+    trigger: true
+    version: every
+  - put: pr-status-pending
+    resource: pull-request
+    params: { path: pull-request, status: pending }
+
+  - put: build-docker-image
+    params: { build: pull-request, tag: pull-request/VERSION }
+    on_failure:
+      put: pr-status-failed
+      resource: pull-request
+      params: { path: pull-request, status: failure }
+
+  - put: pr-status-success
+    resource: pull-request
+    params: { path: pull-request, status: success }
+
+resources:
+  - name: pull-request
+    type: pull-request
+    source:
+      uri: git@github.com:getoutreach/oauth2_proxy.git
+      access_token: ((github-access-token))
+      private_key: ((git-private-key))
+      repo: getoutreach/oauth2_proxy
+
+  - name: build-docker-image
+    type: docker-image
+    source:
+      repository: 182192988802.dkr.ecr.us-west-2.amazonaws.com/oauth2_proxy
+      parameters: { build: pull-request, tag: pull-request/VERSION }
