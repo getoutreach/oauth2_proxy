@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
+	"github.com/bmizerany/assert"
 	"testing"
 )
 
