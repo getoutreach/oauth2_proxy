@@ -20,9 +20,6 @@ jobs:
       - run:
           name: Build
           command: make build
-      - run:
-          name: Docker Build
-          command: make docker
       - deploy:
           name: Deploy package to s3
           command: |
@@ -31,7 +28,5 @@ jobs:
               apt-get install -y ruby-full python-pip
               gem install fpm
               pip install awscli
-              cd /go/src/github.com/bitly/oauth2_proxy
-              make package
               make release
             fi

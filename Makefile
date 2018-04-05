@@ -16,8 +16,10 @@ package: build
 	echo "Packaging oauth2_proxy into $(deb_pkg)"
 	fpm --verbose -s dir -t deb --name oauth2_proxy --prefix /opt/oauth2_proxy/ --version $(version) oauth2_proxy
 
-release:
+release: package
 	echo "Pushing oauth2_proxy package to S2"
 	aws s3 cp $(deb_pkg) s3://outreach-builds/oauth2-proxy/
+
+push: docker
 	echo "Pushing oauth2_proxy docker image to ECR"
 	docker push $(docker_image)
