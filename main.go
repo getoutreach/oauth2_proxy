@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -49,6 +51,7 @@ func main() {
 	flagSet.Var(&googleGroups, "google-group", "restrict logins to members of this google group (may be given multiple times).")
 	flagSet.String("google-admin-email", "", "the google admin to impersonate for api calls")
 	flagSet.String("google-service-account-json", "", "the path to the service account json credentials")
+	flagSet.String("okta-domain", "", "the full domain for which your organization's okta is configured (example.okta.com)")
 	flagSet.String("client-id", "", "the OAuth Client ID: ie: \"123456.apps.googleusercontent.com\"")
 	flagSet.String("client-secret", "", "the OAuth Client Secret")
 	flagSet.String("authenticated-emails-file", "", "authenticate against emails via file (one per line)")
@@ -67,10 +70,9 @@ func main() {
 	flagSet.Bool("cookie-httponly", true, "set HttpOnly cookie flag")
 
 	flagSet.Bool("request-logging", true, "Log requests to stdout")
-	flagSet.String("request-logging-format", defaultRequestLoggingFormat, "Template for log lines")
+	flagSet.String("log-file-path", "", "Log requests to a log file.")
 
 	flagSet.String("provider", "google", "OAuth provider")
-	flagSet.String("oidc-issuer-url", "", "OpenID Connect issuer URL (ie: https://accounts.google.com)")
 	flagSet.String("login-url", "", "Authentication endpoint")
 	flagSet.String("redeem-url", "", "Token redemption endpoint")
 	flagSet.String("profile-url", "", "Profile access endpoint")
@@ -124,9 +126,37 @@ func main() {
 			log.Fatalf("FATAL: unable to open %s %s", opts.HtpasswdFile, err)
 		}
 	}
+	ostream := os.Stdout
+	if opts.LogFilePath != "" {
+		ostream = openLog(opts.LogFilePath)
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGHUP)
+
+		go func(path string) {
+			for {
+				select {
+				case sig, _ := <-c:
+					switch sig {
+					case os.Interrupt:
+						log.Fatal("Interrupt detected. Closing...")
+						return
+					case syscall.SIGHUP:
+						fmt.Println("Recreating log stream...")
+						err := ostream.Close()
+						if err != nil {
+							panic(err)
+						}
+						*ostream = *openLog(path)
+					}
+				}
+			}
+		}(opts.LogFilePath)
+	}
+
+	handler := LoggingHandler(ostream, oauthproxy, opts.RequestLogging)
 
 	s := &Server{
-		Handler: LoggingHandler(os.Stdout, oauthproxy, opts.RequestLogging, opts.RequestLoggingFormat),
+		Handler: handler,
 		Opts:    opts,
 	}
 	s.ListenAndServe()

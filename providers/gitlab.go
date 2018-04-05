@@ -32,11 +32,11 @@ func NewGitLabProvider(p *ProviderData) *GitLabProvider {
 		p.ValidateURL = &url.URL{
 			Scheme: "https",
 			Host:   "gitlab.com",
-			Path:   "/api/v4/user",
+			Path:   "/api/v3/user",
 		}
 	}
 	if p.Scope == "" {
-		p.Scope = "read_user"
+		p.Scope = "api"
 	}
 	return &GitLabProvider{ProviderData: p}
 }

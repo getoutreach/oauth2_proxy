@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/18F/hmacauth"
 	"github.com/bitly/oauth2_proxy/cookie"
 	"github.com/bitly/oauth2_proxy/providers"
-	"github.com/mbland/hmacauth"
 )
 
 const SignatureHeader = "GAP-Signature"
@@ -155,12 +155,16 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 	redirectURL.Path = fmt.Sprintf("%s/callback", opts.ProxyPrefix)
 
 	log.Printf("OAuthProxy configured for %s Client ID: %s", opts.provider.Data().ProviderName, opts.ClientID)
+	domain := opts.CookieDomain
+	if domain == "" {
+		domain = "<default>"
+	}
 	refresh := "disabled"
 	if opts.CookieRefresh != time.Duration(0) {
 		refresh = fmt.Sprintf("after %s", opts.CookieRefresh)
 	}
 
-	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHttpOnly, opts.CookieExpire, opts.CookieDomain, refresh)
+	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHttpOnly, opts.CookieExpire, domain, refresh)
 
 	var cipher *cookie.Cipher
 	if opts.PassAccessToken || (opts.CookieRefresh != time.Duration(0)) {
@@ -244,13 +248,6 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	if s.Email == "" {
 		s.Email, err = p.provider.GetEmailAddress(s)
 	}
-
-	if s.User == "" {
-		s.User, err = p.provider.GetUserName(s)
-		if err != nil && err.Error() == "not implemented" {
-			err = nil
-		}
-	}
 	return
 }
 
@@ -270,21 +267,22 @@ func (p *OAuthProxy) MakeCSRFCookie(req *http.Request, value string, expiration 
 }
 
 func (p *OAuthProxy) makeCookie(req *http.Request, name string, value string, expiration time.Duration, now time.Time) *http.Cookie {
+	domain := req.Host
+	if h, _, err := net.SplitHostPort(domain); err == nil {
+		domain = h
+	}
 	if p.CookieDomain != "" {
-		domain := req.Host
-		if h, _, err := net.SplitHostPort(domain); err == nil {
-			domain = h
-		}
 		if !strings.HasSuffix(domain, p.CookieDomain) {
 			log.Printf("Warning: request host is %q but using configured cookie domain of %q", domain, p.CookieDomain)
 		}
+		domain = p.CookieDomain
 	}
 
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
-		Domain:   p.CookieDomain,
+		Domain:   domain,
 		HttpOnly: p.CookieHttpOnly,
 		Secure:   p.CookieSecure,
 		Expires:  now.Add(expiration),
@@ -300,15 +298,7 @@ func (p *OAuthProxy) SetCSRFCookie(rw http.ResponseWriter, req *http.Request, va
 }
 
 func (p *OAuthProxy) ClearSessionCookie(rw http.ResponseWriter, req *http.Request) {
-	clr := p.MakeSessionCookie(req, "", time.Hour*-1, time.Now())
-	http.SetCookie(rw, clr)
-
-	// ugly hack because default domain changed
-	if p.CookieDomain == "" {
-		clr2 := *clr
-		clr2.Domain = req.Host
-		http.SetCookie(rw, &clr2)
-	}
+	http.SetCookie(rw, p.MakeSessionCookie(req, "", time.Hour*-1, time.Now()))
 }
 
 func (p *OAuthProxy) SetSessionCookie(rw http.ResponseWriter, req *http.Request, val string) {
@@ -492,11 +482,7 @@ func (p *OAuthProxy) SignIn(rw http.ResponseWriter, req *http.Request) {
 		p.SaveSession(rw, req, session)
 		http.Redirect(rw, req, redirect, 302)
 	} else {
-		if p.SkipProviderButton {
-			p.OAuthStart(rw, req)
-		} else {
-			p.SignInPage(rw, req, http.StatusOK)
-		}
+		p.SignInPage(rw, req, 200)
 	}
 }
 
