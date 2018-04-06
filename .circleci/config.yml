@@ -11,17 +11,32 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Test
+          name: Install Docker client
           command: |
-            curl -s https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > gpm
-            chmod +x gpm
-            ./gpm install
-            ./test.sh
+            set -x
+            VER="17.09.0-ce"
+            curl -L https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz | \
+            tar -xzf - > /usr/bin/docker
+            chmod +x /usr/bin/docker
       - run:
-          name: Build
-          command: make build
+          name: Install GPM and Dependencies
+          command: |
+            curl -L https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > /usr/bin/gpm
+            chmod +x /usr/bin/gpm
+            gpm install
+      - run:
+          name: Run Tests
+          command: ./test.sh
+      - run:
+          name: Build Binary
+          command: |
+            make build
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t oauth2_proxy:latest .
       - deploy:
-          name: Deploy package to s3
+          name: Upload package to s3
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               apt-get update
@@ -29,4 +44,17 @@ jobs:
               gem install fpm
               pip install awscli
               make release
+            fi
+      - deploy:
+          name: Docker Push
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker login -u $REGISTRY_USER -p $REGISTRY_PASSWD registry.outreach.cloud
+
+              repo='registry.outreach.cloud/oauth2_proxy'
+              tag=$(awk -F'"' '/^const VERSION/ {printf "%s", $$2}' version.go)
+
+              docker tag oauth2_proxy:latest ${repo}:${tag}
+              docker push ${repo}:${tag}
+              docker tag oauth2_proxy:latest ${repo}:latest
             fi
