@@ -43,6 +43,8 @@ jobs:
               apt-get install -y ruby-full python-pip
               gem install fpm
               pip install awscli
+
+              make package
               make release
             fi
       - deploy:
