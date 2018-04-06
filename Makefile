@@ -12,5 +12,5 @@ package:
 	fpm --verbose -s dir -t deb --name oauth2_proxy --prefix /opt/oauth2_proxy/ --version $(version) oauth2_proxy
 
 release:
-	echo "Pushing oauth2_proxy package to S2"
+	echo "Pushing oauth2_proxy package to S3"
 	aws s3 cp $(deb_pkg) s3://outreach-builds/oauth2-proxy/
