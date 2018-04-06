@@ -1,16 +1,11 @@
 version := $(shell awk -F'"' '/^const VERSION/ {printf "%s", $$2}' version.go)
 deb_pkg := oauth2-proxy_$(version)_amd64.deb
-docker_image := 182192988802.dkr.ecr.us-west-2.amazonaws.com/oauth2_proxy:$(version)
 
 default: build
 
 build:
 	echo "Building oauth2_proxy v$(version)"
 	go build -ldflags="-s -w" -o oauth2_proxy || exit 1
-
-docker:
-	echo "Building docker image $(docker_image)"
-	docker build -t $(docker_image) .
 
 package:
 	echo "Packaging oauth2_proxy into $(deb_pkg)"
@@ -19,7 +14,3 @@ package:
 release:
 	echo "Pushing oauth2_proxy package to S2"
 	aws s3 cp $(deb_pkg) s3://outreach-builds/oauth2-proxy/
-
-push:
-	echo "Pushing oauth2_proxy docker image to ECR"
-	docker push $(docker_image)
