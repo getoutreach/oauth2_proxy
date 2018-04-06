@@ -8,18 +8,18 @@ build:
 	echo "Building oauth2_proxy v$(version)"
 	go build -ldflags="-s -w" -o oauth2_proxy || exit 1
 
-docker: build
+docker:
 	echo "Building docker image $(docker_image)"
 	docker build -t $(docker_image) .
 
-package: build
+package:
 	echo "Packaging oauth2_proxy into $(deb_pkg)"
 	fpm --verbose -s dir -t deb --name oauth2_proxy --prefix /opt/oauth2_proxy/ --version $(version) oauth2_proxy
 
-release: package
+release:
 	echo "Pushing oauth2_proxy package to S2"
 	aws s3 cp $(deb_pkg) s3://outreach-builds/oauth2-proxy/
 
-push: docker
+push:
 	echo "Pushing oauth2_proxy docker image to ECR"
 	docker push $(docker_image)
