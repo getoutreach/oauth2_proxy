@@ -21,23 +21,29 @@ jobs:
       - run:
           name: Install GPM and Dependencies
           command: |
+            set -x
             curl -L https://raw.githubusercontent.com/pote/gpm/v1.4.0/bin/gpm > /usr/bin/gpm
             chmod +x /usr/bin/gpm
             gpm install
       - run:
           name: Run Tests
-          command: ./test.sh
-      - run:
-          name: Build Binary
           command: |
+            set -x
+            ./test.sh
+      - run:
+          name: Build Go Binary
+          command: |
+            set -x
             make build
       - run:
           name: Build Docker Image
           command: |
+            set -x
             docker build -t oauth2_proxy:latest .
       - deploy:
-          name: Upload package to s3
+          name: Upload to S3 / Docker Registry
           command: |
+            set -x
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               apt-get update
               apt-get install -y ruby-full python-pip
@@ -46,11 +52,7 @@ jobs:
 
               make package
               make release
-            fi
-      - deploy:
-          name: Docker Push
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+
               echo -n "$REGISTRY_PASSWD" | docker login -u $REGISTRY_USER --passwd-stdin registry.outreach.cloud
 
               repo='registry.outreach.cloud/oauth2_proxy'
@@ -59,3 +61,4 @@ jobs:
               docker tag oauth2_proxy:latest ${repo}:${tag} ${repo}:latest
               docker push ${repo}:${tag} && docker push ${repo}:latest
             fi
+
