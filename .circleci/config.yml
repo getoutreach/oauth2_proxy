@@ -51,12 +51,11 @@ jobs:
           name: Docker Push
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              docker login -u $REGISTRY_USER -p $REGISTRY_PASSWD registry.outreach.cloud
+              echo -n "$REGISTRY_PASSWD" | docker login -u $REGISTRY_USER --passwd-stdin registry.outreach.cloud
 
               repo='registry.outreach.cloud/oauth2_proxy'
               tag=$(awk -F'"' '/^const VERSION/ {printf "%s", $$2}' version.go)
 
-              docker tag oauth2_proxy:latest ${repo}:${tag}
-              docker push ${repo}:${tag}
-              docker tag oauth2_proxy:latest ${repo}:latest
+              docker tag oauth2_proxy:latest ${repo}:${tag} ${repo}:latest
+              docker push ${repo}:${tag} && docker push ${repo}:latest
             fi
