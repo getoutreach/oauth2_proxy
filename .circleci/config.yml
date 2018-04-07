@@ -10,14 +10,16 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Install Docker client
           command: |
             set -x
             VER="17.09.0-ce"
-            curl -L https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz | \
-            tar -xzf - > /usr/bin/docker
-            chmod +x /usr/bin/docker
+            curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+            mv /tmp/docker/* /usr/bin
       - run:
           name: Install GPM and Dependencies
           command: |
@@ -47,18 +49,18 @@ jobs:
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               apt-get update
               apt-get install -y ruby-full python-pip
-              gem install fpm
+              gem install fpm --no-ri --no-rdoc
               pip install awscli
 
               make package
               make release
 
-              echo -n "$REGISTRY_PASSWD" | docker login -u $REGISTRY_USER --passwd-stdin registry.outreach.cloud
+              echo -n "$REGISTRY_PASSWD" | docker login -u $REGISTRY_USER --password-stdin registry.outreach.cloud
 
               repo='registry.outreach.cloud/oauth2_proxy'
               tag=$(awk -F'"' '/^const VERSION/ {printf "%s", $$2}' version.go)
 
-              docker tag oauth2_proxy:latest ${repo}:${tag} ${repo}:latest
+              docker tag oauth2_proxy:latest ${repo}:${tag} && \
+              docker tag oauth2_proxy:latest ${repo}:latest
               docker push ${repo}:${tag} && docker push ${repo}:latest
             fi
-
