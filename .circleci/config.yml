@@ -45,14 +45,6 @@ jobs:
           command: |
             set -x
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              apt-get update
-              apt-get install -y ruby-full python-pip
-              gem install fpm --no-ri --no-rdoc
-              pip install awscli
-
-              make package
-              make release
-
               echo -n "$REGISTRY_PASSWD" | docker login -u $REGISTRY_USER --password-stdin registry.outreach.cloud
 
               repo='registry.outreach.cloud/oauth2_proxy'
