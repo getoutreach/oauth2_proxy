@@ -1,4 +1,4 @@
-FROM golang:1.10
+FROM golang:1.12
 
 WORKDIR /oauth2_proxy
 COPY . .
