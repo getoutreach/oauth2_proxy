@@ -1,4 +1,4 @@
-FROM golang:1.10
+FROM alpine:3.10
 
 WORKDIR /oauth2_proxy
 COPY . .
