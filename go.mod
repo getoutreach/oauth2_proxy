@@ -12,7 +12,7 @@ require (
 	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
-	github.com/mreiferson/go-options v0.0.0-20190302064952-20ba7d382d05
+	github.com/mreiferson/go-options v0.0.0-20190301071757-5fcea6070c41
 	github.com/rogpeppe/go-internal v1.3.1 // indirect
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
 	golang.org/x/exp v0.0.0-20190829153037-c13cbed26979 // indirect
