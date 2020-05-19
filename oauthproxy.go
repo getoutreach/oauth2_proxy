@@ -251,7 +251,7 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	}
 
 	if v, ok := p.provider.(providers.HaveUserGruops); ok {
-		groups, err := v.GetUserGroups()
+		groups, err := v.GetUserGroups(s)
 		if err == nil {
 			s.Groups = strings.Join(groups, ",")
 		} else {
@@ -692,7 +692,7 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 			rw.Header().Set("X-Auth-Request-Email", session.Email)
 		}
 	}
-	if p.SetXAuthOktaGroups {
+	if p.SetXAuthOktaGroups && session.Groups != "" {
 		rw.Header().Set("X-Auth-Request-Okta-Groups", session.Groups)
 	}
 	if p.PassAccessToken && session.AccessToken != "" {
