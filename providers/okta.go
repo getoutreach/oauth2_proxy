@@ -6,11 +6,13 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/bitly/go-simplejson"
 	"github.com/bitly/oauth2_proxy/api"
 )
 
 type OktaProvider struct {
 	*ProviderData
+	json *simplejson.Json
 }
 
 func (p *OktaProvider) SetOktaDomain(domain string) {
@@ -52,18 +54,38 @@ func getOktaHeader(access_token string) http.Header {
 }
 
 func (p *OktaProvider) GetEmailAddress(s *SessionState) (string, error) {
+	if p.json == nil {
+		err := p.getUserInfo(s)
+		if err != nil {
+			return "", err
+		}
+	}
+	return p.json.Get("email").String()
+}
 
+func (p *OktaProvider) GetUserGroups(s *SessionState) ([]string, error) {
+	if p.json == nil {
+		err := p.getUserInfo(s)
+		if err != nil {
+			return []string{}, err
+		}
+	}
+	return p.json.Get("groups").StringArray()
+}
+
+func (p *OktaProvider) getUserInfo(s *SessionState) error {
 	req, err := http.NewRequest("GET",
 		p.ValidateURL.String(), nil)
 	if err != nil {
 		log.Printf("failed building request %s", err)
-		return "", err
+		return err
 	}
 	req.Header = getOktaHeader(s.AccessToken)
 	json, err := api.Request(req)
 	if err != nil {
 		log.Printf("failed making request %s", err)
-		return "", err
+		return err
 	}
-	return json.Get("email").String()
+	p.json = json
+	return nil
 }

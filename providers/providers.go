@@ -16,6 +16,13 @@ type Provider interface {
 	CookieForSession(*SessionState, *cookie.Cipher) (string, error)
 }
 
+// For provider like okta, we can not only know the user's email and name, it
+// also provides the groups information. This is useful for us to use that to
+// determine whether a privelege should be granted based on group membership.
+type HaveUserGruops interface {
+	GetUserGroups(*SessionState) ([]string, error)
+}
+
 func New(provider string, p *ProviderData) Provider {
 	switch provider {
 	case "myusa":
