@@ -66,6 +66,7 @@ type OAuthProxy struct {
 	PassUserHeaders     bool
 	BasicAuthPassword   string
 	PassAccessToken     bool
+	SetXAuthOktaGroups  bool
 	CookieCipher        *cookie.Cipher
 	skipAuthRegex       []string
 	skipAuthPreflight   bool
@@ -248,6 +249,16 @@ func (p *OAuthProxy) redeemCode(host, code string) (s *providers.SessionState, e
 	if s.Email == "" {
 		s.Email, err = p.provider.GetEmailAddress(s)
 	}
+
+	if v, ok := p.provider.(providers.HaveUserGruops); ok {
+		groups, err := v.GetUserGroups(s)
+		if err == nil {
+			s.Groups = strings.Join(groups, ",")
+		} else {
+			log.Printf("GetUserGroups failed %s", err.Error())
+		}
+	}
+
 	return
 }
 
@@ -680,6 +691,9 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		if session.Email != "" {
 			rw.Header().Set("X-Auth-Request-Email", session.Email)
 		}
+	}
+	if p.SetXAuthOktaGroups && session.Groups != "" {
+		rw.Header().Set("X-Auth-Request-Okta-Groups", session.Groups)
 	}
 	if p.PassAccessToken && session.AccessToken != "" {
 		req.Header["X-Forwarded-Access-Token"] = []string{session.AccessToken}

@@ -51,6 +51,7 @@ func main() {
 	flagSet.Var(&googleGroups, "google-group", "restrict logins to members of this google group (may be given multiple times).")
 	flagSet.String("google-admin-email", "", "the google admin to impersonate for api calls")
 	flagSet.String("google-service-account-json", "", "the path to the service account json credentials")
+	flagSet.Bool("set-xauth-okta-groups", false, "set X-Auth-Request-Okta-Groups response headers (useful in Nginx auth_request mode), in a comma-separated string")
 	flagSet.String("okta-domain", "", "the full domain for which your organization's okta is configured (example.okta.com)")
 	flagSet.String("client-id", "", "the OAuth Client ID: ie: \"123456.apps.googleusercontent.com\"")
 	flagSet.String("client-secret", "", "the OAuth Client Secret")
